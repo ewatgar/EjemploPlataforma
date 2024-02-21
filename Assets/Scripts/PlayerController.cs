@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     Rigidbody2D rb;
     Animator an;
+    GroundDetector gd;
     public float
         maxHSpeed = 10,
         hAccel = 30,
@@ -14,12 +15,12 @@ public class PlayerController : MonoBehaviour
         jumpImpulse = 10;
 
     int dir = 1;
-    bool haSaltado = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         an = GetComponent<Animator>();
+        gd = GetComponentInChildren<GroundDetector>();
     }
 
     void FixedUpdate()
@@ -28,10 +29,22 @@ public class PlayerController : MonoBehaviour
         float dx = Input.GetAxis("Horizontal");
         float dy = Input.GetAxis("Vertical");
         float vx = 0;
+        //an.SetFloat("Vx", Math.Abs(vx)); //pasar el valor absoluto de la velocidad
+
 
         if (dx == 0)
         {
             float delta = hDeccel * Time.fixedDeltaTime;
+            if (rb.velocityY != 0)
+            {
+                delta = 0;
+            }
+            else
+            {
+                delta = hDeccel * Time.fixedDeltaTime;
+            }
+
+
 
             // Deceleramos al personaje en la dirección contraria a su movimiento
             if (rb.velocityX > 0)
@@ -40,7 +53,7 @@ public class PlayerController : MonoBehaviour
                 vx = rb.velocityX - delta;
                 if (vx < 0) vx = 0;
             }
-            else
+            else if (rb.velocityX < 0)
             {
                 // Me muevo hacia la izquierda
                 vx = rb.velocityX + delta;
@@ -57,23 +70,17 @@ public class PlayerController : MonoBehaviour
         // Que mire en un lado a otro
         if (dx > 0) dir = 1;
         if (dx < 0) dir = -1;
+
         transform.localScale = new Vector3(dir, 1, 1);
 
         an.SetFloat("Vx", Math.Abs(vx)); //pasar el valor absoluto de la velocidad
         rb.velocityX = vx;
 
-
         //jump
-        if (dy > 0 && !haSaltado)
+        Debug.Log(gd.IsGrounded);
+        if (dy > 0 && gd.IsGrounded)
         {
             rb.AddForceY(jumpImpulse, ForceMode2D.Impulse);
-            haSaltado = true;
         }
-
-        if (rb.velocityY < 0)
-        {
-            haSaltado = false;
-        }
-
     }
 }
